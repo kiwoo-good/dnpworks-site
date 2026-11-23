@@ -1,7 +1,7 @@
 """dnpworks.com 정적 사이트를 만든다.
 
     python3 build.py                           docs/ 에 사이트를 만든다
-    python3 build.py --effective 2026-12-01    개인정보처리방침 시행일 지정
+    python3 build.py --effective split_privacy=2026-12-01    그 방침의 시행일 바꾸기 (기본은 POLICIES 의 날짜)
 
 페이지: 메인 · 회사소개 · 서비스(목록, 홈 정리 상세) · 고객지원 · 개인정보처리방침 — 한국어(/)와 영어(/en/).
 문구는 src/content.py, 모양은 src/style.css 에 있다. 로고는 src/logo.svg 가 있으면 그것을 쓰고 없으면 글자 로고를 쓴다.
@@ -24,6 +24,10 @@ ROOT = Path(__file__).resolve().parent
 SRC = ROOT / "src"
 OUT = ROOT / "docs"
 POLICY_MD = Path.home() / "dev" / "home-tidy" / "mvp" / "PRIVACY_POLICY_draft.md"
+# 방침은 앱마다 한 장. 시행일은 방침마다 따로 둔다 — 한 방침을 고쳐 다시 만들 때 다른 방침의 날짜가 바뀌면 안 된다.
+#   (주소 열쇠, 초안 파일, 시행일)
+POLICIES = [("privacy", POLICY_MD, "2026-11-20"),
+            ("split_privacy", Path.home() / "dev" / "training-core" / "docs" / "PRIVACY_POLICY.md", "2026-11-23")]
 
 sys.path.insert(0, str(SRC))
 from content import CO, DOMAIN, EMAIL, T   # noqa: E402
@@ -31,7 +35,7 @@ from content import CO, DOMAIN, EMAIL, T   # noqa: E402
 e = html.escape
 MAILTO = f'<a href="mailto:{EMAIL}">{EMAIL}</a>'
 PATHS = {"home": "/", "about": "/about/", "services": "/services/", "home_tidy": "/services/home-tidy/",
-         "support": "/support/", "privacy": "/home-tidy/privacy/"}
+         "support": "/support/", "privacy": "/home-tidy/privacy/", "split_privacy": "/split/privacy/"}
 ARROW = '<svg class="arr" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11m-4.500-4.500L15 10l-4.500 4.500" fill="none" stroke="currentColor" stroke-width="1.600" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 FAVICON = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#26272a"/>'
            '<text x="16" y="19" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="13" fill="#fff">D&amp;P</text>'
@@ -230,7 +234,7 @@ def support(t):
 <div><a class="mail" href="mailto:{EMAIL}">{EMAIL}</a><p class="note">{e(s['mail_p'])}</p></div></div></section>
 <section class="line"><div class="wrap two"><h2>{e(s['faq_h'])}</h2><div class="faq">{faq}</div></div></section>
 <section class="line"><div class="wrap two"><h2>{e(s['pol_h'])}</h2>
-<div class="list"><a href="{url(t, 'privacy')}"><span>{e(s['pol_item'])}</span>{ARROW}</a></div></div></section>
+<div class="list"><a href="{url(t, 'privacy')}"><span>{e(s['pol_item'])}</span>{ARROW}</a><a href="{url(t, 'split_privacy')}"><span>{e(s['pol_item_split'])}</span>{ARROW}</a></div></div></section>
 </main>"""
     return page(t, "support", s["h1"], s["lead"], body)
 
@@ -272,7 +276,7 @@ def md_to_html(md):
     return title, "\n".join(out)
 
 
-def policy(t, md, effective):
+def policy(t, md, effective, key="privacy"):
     md = "\n".join(ln for ln in md.strip().splitlines() if not ln.startswith(">"))   # 작성자용 메모 줄은 싣지 않는다
     md = re.sub(r"\n(운영자|Operator):.*?$", "", md, flags=re.S).rstrip()            # 끝의 '(채울 것)' 세 줄은 여기서 채운다
     assert "채울 것" not in md and "to fill in" not in md, "방침 본문에 빈칸이 남아 있다"
@@ -286,7 +290,7 @@ def policy(t, md, effective):
     first = re.search(r"<p>(.*?)</p>", body, flags=re.S)
     desc = html.unescape(re.sub(r"<[^>]+>", "", first.group(1)))[:160] if first else title
     main = f'<main>{sub_head(t, t["nav"]["support"], title)}<section class="doc"><div class="wrap">{body}\n{contact}</div></section></main>'
-    return page(t, "privacy", title, desc, main)
+    return page(t, key, title, desc, main)
 
 
 def write(rel, text):
@@ -297,12 +301,15 @@ def write(rel, text):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--effective", default=datetime.date.today().isoformat(), help="방침 시행일 YYYY-MM-DD (기본: 오늘)")
-    ap.add_argument("--policy", default=str(POLICY_MD), help="방침 초안 마크다운 경로")
+    ap.add_argument("--effective", action="append", default=[], metavar="KEY=YYYY-MM-DD",
+                    help="방침 시행일을 바꿀 때 (예: split_privacy=2026-12-01). 안 주면 POLICIES 의 날짜")
     a = ap.parse_args()
-    effective = datetime.date.fromisoformat(a.effective)
-    md = Path(a.policy).read_text(encoding="utf-8")
-    pol = dict(zip(("ko", "en"), re.split(r"\n---\n", md, maxsplit=1)))
+    dates = dict(x.split("=", 1) for x in a.effective)
+    pols = []
+    for key, path, eff in POLICIES:
+        md = Path(path).read_text(encoding="utf-8")
+        pols.append((key, dict(zip(("ko", "en"), re.split(r"\n---\n", md, maxsplit=1))),
+                     datetime.date.fromisoformat(dates.get(key, eff))))
 
     if OUT.exists():
         shutil.rmtree(OUT)
@@ -318,8 +325,9 @@ def main():
         for key, fn in (("home", home), ("about", about), ("services", services), ("home_tidy", home_tidy), ("support", support)):
             write(url(t, key).lstrip("/") + "index.html", fn(t))
             urls.append(url(t, key))
-        write(url(t, "privacy").lstrip("/") + "index.html", policy(t, pol[lang], effective))
-        urls.append(url(t, "privacy"))
+        for key, pol, effective in pols:
+            write(url(t, key).lstrip("/") + "index.html", policy(t, pol[lang], effective, key))
+            urls.append(url(t, key))
     ko = T["ko"]
     write("404.html", page(ko, "home", "페이지를 찾을 수 없습니다", "",
                            f'<main>{sub_head(ko, "404", "페이지를 찾을 수 없습니다")}<section><div class="wrap">'
