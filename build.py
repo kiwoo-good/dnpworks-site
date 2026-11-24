@@ -3,7 +3,8 @@
     python3 build.py                           docs/ 에 사이트를 만든다
     python3 build.py --effective split_privacy=2026-12-01    그 방침의 시행일 바꾸기 (기본은 POLICIES 의 날짜)
 
-페이지: 메인 · 회사소개 · 서비스(목록, 홈 정리 상세) · 고객지원 · 개인정보처리방침 — 한국어(/)와 영어(/en/).
+페이지: 메인 · 회사소개 · 서비스(목록, 홈 정리 · 스플릿 상세) · 고객지원 · 앱별 공지사항 · 개인정보처리방침 — 한국어(/)와 영어(/en/).
+앱 화면 사진은 src/img/ 에 둔다 (개인 정보가 찍힌 화면은 쓰지 않는다). 앱이 읽어 갈 공지 파일은 /<앱>/notices.json.
 문구는 src/content.py, 모양은 src/style.css 에 있다. 로고는 src/logo.svg 가 있으면 그것을 쓰고 없으면 글자 로고를 쓴다.
 
 개인정보처리방침 본문은 손으로 옮겨 적지 않고 홈 정리 저장소의 초안
@@ -35,7 +36,12 @@ from content import CO, DOMAIN, EMAIL, T   # noqa: E402
 e = html.escape
 MAILTO = f'<a href="mailto:{EMAIL}">{EMAIL}</a>'
 PATHS = {"home": "/", "about": "/about/", "services": "/services/", "home_tidy": "/services/home-tidy/",
-         "support": "/support/", "privacy": "/home-tidy/privacy/", "split_privacy": "/split/privacy/"}
+         "split": "/services/split/", "support": "/support/",
+         "ht_notice": "/home-tidy/notice/", "split_notice": "/split/notice/",
+         "privacy": "/home-tidy/privacy/", "split_privacy": "/split/privacy/"}
+# 페이지가 속한 큰 메뉴 (머리말에서 밑줄을 긋는 자리)와 앱별 색 (body 의 class — style.css 의 body.app-*)
+NAV_OF = {"home_tidy": "services", "split": "services", "ht_notice": "support", "split_notice": "support"}
+TONE_OF = {"home_tidy": "app-ht", "ht_notice": "app-ht", "split": "app-split", "split_notice": "app-split"}
 ARROW = '<svg class="arr" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11m-4.500-4.500L15 10l-4.500 4.500" fill="none" stroke="currentColor" stroke-width="1.600" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 FAVICON = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#26272a"/>'
            '<text x="16" y="19" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="13" fill="#fff">D&amp;P</text>'
@@ -62,8 +68,11 @@ def logo():
 
 def page(t, key, title, desc, body):
     o = other(t)
-    nav = "".join(f'<a href="{url(t, k)}"{" aria-current=page" if k == key or (k == "services" and key == "home_tidy") else ""}>{e(t["nav"][k])}</a>'
+    nav = "".join(f'<a href="{url(t, k)}"{" aria-current=page" if k == NAV_OF.get(key, key) else ""}>{e(t["nav"][k])}</a>'
                   for k in ("about", "services", "support"))
+    # 언어 고르기는 메뉴가 아니다 — 머리말 위에 작게 둔다
+    langs = "".join(f'<b lang="{x["lang"]}">{lbl}</b>' if x is t else f'<a href="{url(x, key)}" lang="{x["lang"]}">{lbl}</a>'
+                    for x, lbl in ((T["ko"], "KO"), (T["en"], "EN")))
     ko, en = (t, o) if t["lang"] == "ko" else (o, t)
     cols = "".join(f'<div><h4>{e(h)}</h4>' + "".join(f'<a href="{url(t, k)}">{e(lbl)}</a>' for k, lbl in links) + "</div>"
                    for h, links in t["foot_cols"])
@@ -87,10 +96,10 @@ def page(t, key, title, desc, body):
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="/style.css">
 </head>
-<body>
-<header class="site"><div class="wrap">
+<body class="{TONE_OF.get(key, '')}">
+<header class="site"><div class="wrap util"><span class="langs">{langs}</span></div><div class="wrap">
 <a class="logo" href="{url(t, 'home')}" aria-label="{e(CO[t['lang']])}">{logo()}</a>
-<nav class="gnb">{nav}<a class="lang" href="{url(o, key)}" lang="{o['lang']}">{t['lang_switch']}</a></nav>
+<nav class="gnb">{nav}</nav>
 </div></header>
 {body}
 <footer class="site"><div class="wrap">
@@ -149,10 +158,18 @@ def home(t):
     body = f"""<main>
 <div class="wrap">
 <div class="hero">
-<a class="hero-main" href="{url(t, 'home_tidy')}">
+<div class="hero-rot" id="rot">
+<a class="hero-main on" href="{url(t, 'home_tidy')}">
 <div class="hero-copy"><span class="cat">{e(m['hero_cat'])}</span><h1>{m['hero_h']}</h1><span class="more">{e(m['hero_more'])}{ARROW}</span></div>
 {phone(t)}
 </a>
+<a class="hero-main split" href="{url(t, 'split')}">
+<div class="hero-copy"><span class="cat">{e(m['hero2_cat'])}</span><h1>{m['hero2_h']}</h1><span class="more">{e(m['hero_more'])}{ARROW}</span></div>
+{shot('split-room', m['hero2_alt'])}
+</a>
+<div class="dots">{"".join(f'<button type="button" aria-label="{e(x)}"{" class=on" if i == 0 else ""}></button>' for i, x in enumerate(m['hero_dots']))}</div>
+</div>
+{ROTATE_JS}
 <div class="hero-side">{side}</div>
 </div>
 <p class="slogan">{m['slogan']}</p>
@@ -217,12 +234,86 @@ def home_tidy(t):
 <div><p class="crumb">{e(t['nav']['services'])} · {e(h['state'])}</p><h1>{e(h['h1'])}</h1><p class="lead">{e(h['lead'])}</p></div>
 {phone(t)}
 </div></div>
-<section><div class="wrap two"><h2>{e(h['how_h'])}</h2><div class="steps">{steps}</div></div></section>
-<section class="line"><div class="wrap two"><h2>{e(h['env_h'])}</h2><dl class="info">{env}</dl></div></section>
-<section class="line"><div class="wrap two"><h2>{e(h['perm_h'])}</h2>
+{app_menu(t, h['menu'], 'ht_notice', 'privacy')}
+<section id="how"><div class="wrap two"><h2>{e(h['how_h'])}</h2><div class="steps">{steps}</div></div></section>
+<section class="line" id="shots"><div class="wrap"><div class="sec-head"><h2>{e(h['shots_h'])}</h2></div>
+<div class="shots">{"".join(shot(f'home-tidy-{i}', a) for i, a in enumerate(h['shots_alt'], 1))}</div>
+<p class="note center">{e(h['shots_note'])}</p></div></section>
+<section class="line" id="env"><div class="wrap two"><h2>{e(h['env_h'])}</h2><dl class="info">{env}</dl></div></section>
+<section class="line" id="perms"><div class="wrap two"><h2>{e(h['perm_h'])}</h2>
 <div><dl class="info">{perms}</dl><p class="note"><a class="text-link" href="{url(t, 'privacy')}">{e(h['privacy'])}{ARROW}</a></p></div></div></section>
 </main>"""
     return page(t, "home_tidy", h["h1"], h["lead"], body)
+
+
+def shot(name, alt):
+    """휴대전화 틀에 넣은 앱 화면 (src/img/<name>.jpg)."""
+    return f'<span class="shot"><img src="/img/{name}.jpg" alt="{e(alt)}" loading="lazy"></span>'
+
+
+def app_menu(t, items, notice_key, privacy_key):
+    """앱 소개 페이지의 메뉴 줄 — 페이지 안의 자리와 그 앱의 공지 · 방침 · 문의."""
+    a = t["app_menu"]
+    links = [(href, lbl) for href, lbl in items] + [(url(t, notice_key), a["notice"]), (url(t, privacy_key), a["privacy"]),
+                                                   (url(t, "support"), a["contact"])]
+    return (f'<nav class="subnav" aria-label="{e(a["label"])}"><div class="wrap">'
+            + "".join(f'<a href="{h}">{e(lbl)}</a>' for h, lbl in links) + "</div></nav>")
+
+
+# 첫 화면의 큰 칸을 5초마다 넘긴다. 움직임을 줄이라고 한 사람에게는 넘기지 않는다 (막대로 직접 고른다).
+ROTATE_JS = ('<script>(function(){var r=document.getElementById("rot");if(!r)return;'
+             'var s=r.querySelectorAll(".hero-main"),d=r.querySelectorAll(".dots button"),i=0,t;'
+             'function go(n){i=n;for(var k=0;k<s.length;k++){s[k].classList.toggle("on",k===n);d[k].classList.toggle("on",k===n)}'
+             'r.classList.toggle("light",s[n].classList.contains("split"))}'
+             'function arm(){clearInterval(t);if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;'
+             't=setInterval(function(){go((i+1)%s.length)},5000)}'
+             'for(var k=0;k<d.length;k++)(function(n){d[n].onclick=function(){go(n);arm()}})(k);arm()})();</script>')
+
+
+def split(t):
+    s = t["split"]
+    what = "".join(f'<div><span class="n">0{i}</span><h3>{e(a)}</h3><p>{e(b)}</p></div>' for i, (a, b) in enumerate(s["what"], 1))
+    env = "".join(f"<dt>{e(k)}</dt><dd>{e(v)}</dd>" for k, v in s["env"])
+    shots = "".join(shot(n, a) for n, a in zip(("split-room", "split-today", "split-journey"), s["shots_alt"]))
+    a = t["app_menu"]
+    body = f"""<main>
+<div class="sub-head feature"><div class="wrap">
+<div><p class="crumb">{e(t['nav']['services'])} · {e(s['state'])}</p><p class="pixel" aria-hidden="true">SPLIT</p><h1>{e(s['h1'])}</h1><p class="lead">{e(s['lead'])}</p></div>
+{shot('split-room', s['shots_alt'][0])}
+</div></div>
+{app_menu(t, s['menu'], 'split_notice', 'split_privacy')}
+<section id="what"><div class="wrap two"><h2>{e(s['what_h'])}</h2><div class="values stack">{what}</div></div></section>
+<section class="line" id="shots"><div class="wrap"><div class="sec-head"><h2>{e(s['shots_h'])}</h2></div>
+<div class="shots">{shots}</div><p class="note center">{e(s['shots_note'])}</p></div></section>
+<section class="line" id="env"><div class="wrap two"><h2>{e(s['env_h'])}</h2><dl class="info">{env}</dl></div></section>
+<section class="line"><div class="wrap two"><h2>{e(s['more_h'])}</h2>
+<div class="list"><a href="{url(t, 'split_notice')}"><span>{e(a['notice'])}</span>{ARROW}</a><a href="{url(t, 'split_privacy')}"><span>{e(a['privacy'])}</span>{ARROW}</a><a href="{url(t, 'support')}"><span>{e(a['contact'])}</span>{ARROW}</a></div></div></section>
+</main>"""
+    return page(t, "split", s["h1"], s["desc"], body)
+
+
+def notice(t, app):
+    """앱별 공지사항. 글은 src/content.py 의 notice[app] — 앱이 읽어 갈 파일(notices.json)도 같은 글로 만든다."""
+    n, name = t["notice"], t["apps"][app]
+    key, back = {"split": ("split_notice", "split"), "ht": ("ht_notice", "home_tidy")}[app]
+    rows = "".join(f'<article><h3>{e(ttl)} <time datetime="{d}">{d}</time></h3><p>{e(txt)}</p></article>' for d, ttl, txt in n[app])
+    h1 = n["h1"].format(app=name)
+    body = f"""<main>
+{sub_head(t, t['nav']['support'] + ' · ' + name, h1, n['lead'])}
+<section><div class="wrap two"><h2>{e(n['list_h'])}</h2>
+<div><div class="notices">{rows}</div><p class="note"><a class="text-link" href="{url(t, back)}">{e(n['back'].format(app=name))}{ARROW}</a></p></div></div></section>
+</main>"""
+    return page(t, key, h1, n["lead"], body)
+
+
+def notices_json(app):
+    """앱이 읽어 갈 공지 파일. 한국어와 영어를 한 파일에 담는다. id 는 날짜와 그날의 순번."""
+    import json
+    seen, items = {}, []
+    for (d, ko_t, ko_b), (_, en_t, en_b) in zip(T["ko"]["notice"][app], T["en"]["notice"][app]):
+        seen[d] = seen.get(d, 0) + 1
+        items.append({"id": f"{d}-{seen[d]}", "date": d, "title": {"ko": ko_t, "en": en_t}, "body": {"ko": ko_b, "en": en_b}})
+    return json.dumps({"v": 1, "items": items}, ensure_ascii=False, indent=1) + "\n"
 
 
 def support(t):
@@ -233,6 +324,8 @@ def support(t):
 <section><div class="wrap two"><h2>{e(s['mail_h'])}</h2>
 <div><a class="mail" href="mailto:{EMAIL}">{EMAIL}</a><p class="note">{e(s['mail_p'])}</p></div></div></section>
 <section class="line"><div class="wrap two"><h2>{e(s['faq_h'])}</h2><div class="faq">{faq}</div></div></section>
+<section class="line"><div class="wrap two"><h2>{e(s['notice_h'])}</h2>
+<div class="list"><a href="{url(t, 'ht_notice')}"><span>{e(s['notice_item'].format(app=t['apps']['ht']))}</span>{ARROW}</a><a href="{url(t, 'split_notice')}"><span>{e(s['notice_item'].format(app=t['apps']['split']))}</span>{ARROW}</a></div></div></section>
 <section class="line"><div class="wrap two"><h2>{e(s['pol_h'])}</h2>
 <div class="list"><a href="{url(t, 'privacy')}"><span>{e(s['pol_item'])}</span>{ARROW}</a><a href="{url(t, 'split_privacy')}"><span>{e(s['pol_item_split'])}</span>{ARROW}</a></div></div></section>
 </main>"""
@@ -315,6 +408,8 @@ def main():
         shutil.rmtree(OUT)
     OUT.mkdir()
     shutil.copy(SRC / "style.css", OUT / "style.css")
+    if (SRC / "img").is_dir():
+        shutil.copytree(SRC / "img", OUT / "img")
     if (SRC / "logo.svg").exists():
         shutil.copy(SRC / "logo.svg", OUT / "logo.svg")
     write("favicon.svg", FAVICON)
@@ -322,12 +417,15 @@ def main():
     write(".nojekyll", "")
     urls = []
     for lang, t in T.items():
-        for key, fn in (("home", home), ("about", about), ("services", services), ("home_tidy", home_tidy), ("support", support)):
+        for key, fn in (("home", home), ("about", about), ("services", services), ("home_tidy", home_tidy), ("split", split),
+                        ("support", support), ("ht_notice", lambda t: notice(t, "ht")), ("split_notice", lambda t: notice(t, "split"))):
             write(url(t, key).lstrip("/") + "index.html", fn(t))
             urls.append(url(t, key))
         for key, pol, effective in pols:
             write(url(t, key).lstrip("/") + "index.html", policy(t, pol[lang], effective, key))
             urls.append(url(t, key))
+    write("home-tidy/notices.json", notices_json("ht"))
+    write("split/notices.json", notices_json("split"))
     ko = T["ko"]
     write("404.html", page(ko, "home", "페이지를 찾을 수 없습니다", "",
                            f'<main>{sub_head(ko, "404", "페이지를 찾을 수 없습니다")}<section><div class="wrap">'

@@ -1,4 +1,5 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+@import url("https://fonts.googleapis.com/css2?family=Silkscreen&display=swap");
 
 /* 색은 회사 로고에서 가져왔다: 먹색 글자, 금색·청회색 물결. */
 :root {
@@ -39,7 +40,12 @@ a:hover > .arr, a:hover .more .arr, a:hover .state .arr { transform: translateX(
 
 /* ---------- 머리 ---------- */
 header.site { position: sticky; top: 0; z-index: 20; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-header.site .wrap { display: flex; align-items: center; justify-content: space-between; gap: 24px; height: 84px; }
+header.site .wrap { display: flex; align-items: center; justify-content: space-between; gap: 24px; height: 72px; }
+/* 언어 고르기 — 메뉴와 같은 줄에 두지 않고 그 위에 작게 */
+header.site .wrap.util { height: auto; justify-content: flex-end; padding-top: 8px; font-size: 12px; }
+.langs { display: inline-flex; gap: 10px; color: var(--sub); }
+.langs b { color: var(--ink); font-weight: 700; }
+.langs a:hover { color: var(--ink); }
 .logo { display: inline-flex; align-items: center; }
 .logo img { height: 34px; width: auto; display: block; }
 .logo { position: relative; padding-bottom: 9px; }
@@ -54,15 +60,27 @@ header.site .wrap { display: flex; align-items: center; justify-content: space-b
 nav.gnb { display: flex; align-items: center; gap: 34px; font-size: 15px; font-weight: 500; }
 nav.gnb a { padding: 6px 0; border-bottom: 2px solid transparent; }
 nav.gnb a:hover, nav.gnb a[aria-current] { border-bottom-color: var(--ink); }
-nav.gnb a.lang { font-weight: 600; color: var(--sub); border: 0; }
-nav.gnb a.lang:hover { color: var(--ink); }
 
 /* ---------- 메인: 첫 화면 ---------- */
 .hero { display: grid; grid-template-columns: minmax(0, 2.08fr) minmax(0, 1fr); gap: 24px; padding-top: 12px; }
 .hero-main::after { content: ""; position: absolute; left: 44px; right: 44px; top: 44px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--gold) 0 46%, transparent 46% 54%, #8f99a6 54% 100%); opacity: 0.9; width: 72px; }
 .hero-main { position: relative; display: flex; align-items: flex-end; min-height: 500px; border-radius: var(--r); background: var(--dark); color: #fff; padding: 44px; overflow: hidden; }
 .hero-copy { position: relative; z-index: 2; max-width: calc(100% - 320px); }
-.hero-copy h1 br { display: none; }
+.hero-copy h1 span { white-space: nowrap; }
+/* 돌아가는 큰 칸: 켜진 것만 보인다 */
+.hero-rot { position: relative; display: flex; min-height: 500px; }
+.hero-rot .hero-main { display: none; flex: 1; padding-bottom: 68px; }
+.hero-rot .hero-main.on { display: flex; animation: heroIn 0.45s ease; }
+@keyframes heroIn { from { opacity: 0; } to { opacity: 1; } }
+.hero-main.split { background: #efe3cd; color: #2a2520; }
+.hero-main.split::after { background: linear-gradient(90deg, #e8a33d 0 46%, transparent 46% 54%, #2a2520 54% 100%); }
+.hero-main .shot { position: absolute; right: 64px; top: 54px; }
+.dots { position: absolute; left: 44px; bottom: 26px; z-index: 3; display: flex; gap: 8px; }
+.dots button { width: 44px; height: 24px; padding: 10px 0; border: 0; background: none; cursor: pointer; }
+.dots button::before { content: ""; display: block; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.35); }
+.dots button.on::before { background: #fff; }
+.hero-rot.light .dots button::before { background: rgba(42, 37, 32, 0.25); }
+.hero-rot.light .dots button.on::before { background: #b9791c; }
 .hero-copy h1 { font-size: clamp(24px, 2.7vw, 34px); line-height: 1.35; letter-spacing: -0.02em; font-weight: 700; margin: 12px 0 22px; }
 .more { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; }
 .hero-main .phone { position: absolute; right: 64px; top: 54px; }
@@ -90,6 +108,33 @@ nav.gnb a.lang:hover { color: var(--ink); }
 .phone.tidy .folder { opacity: 1; transform: none; }
 .dock { position: absolute; left: 14px; right: 14px; bottom: 14px; height: 56px; border-radius: 20px; background: rgba(26, 29, 36, 0.08); display: flex; align-items: center; justify-content: space-around; padding: 0 10px; }
 .dock i { width: 36px; height: 36px; border-radius: 11px; background: #cfccc5; }
+
+/* 앱 화면 사진 */
+.shot { display: block; width: 248px; aspect-ratio: 390 / 720; border-radius: 34px; overflow: hidden; background: #1c1915; border: 8px solid #0e0f10; box-shadow: 0 28px 60px -24px rgba(0, 0, 0, 0.55); flex: none; }
+.shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.shots { display: flex; flex-wrap: wrap; gap: 40px; justify-content: center; padding: 8px 0 12px; }
+.note.center { text-align: center; }
+
+/* 앱 소개 페이지의 메뉴 줄 */
+.subnav { border-bottom: 1px solid var(--line); background: var(--brand-tint-2, var(--gray)); }
+.subnav .wrap { display: flex; flex-wrap: wrap; gap: 0 28px; font-size: 15px; font-weight: 500; }
+.subnav a { padding: 15px 0 12px; border-bottom: 3px solid transparent; color: var(--sub); }
+.subnav a:first-child, .subnav a:hover { color: var(--ink); border-bottom-color: var(--brand); }
+html { scroll-behavior: smooth; scroll-padding-top: 110px; }
+
+/* 공지 */
+.notices { border-top: 1px solid var(--ink); }
+.notices article { padding: 22px 0; border-bottom: 1px solid var(--line); }
+.notices h3 { font-size: 18px; font-weight: 700; }
+.notices time { font-size: 13px; font-weight: 400; color: var(--sub); margin-left: 10px; white-space: nowrap; }
+.notices p { color: var(--sub); margin-top: 8px; }
+
+/* 앱별 색 — 앱 화면과 닮게, 다만 사이트의 밝은 바탕은 지킨다 */
+body.app-split { --bg: #fcf9f3; --ink: #2a2520; --sub: #5f5649; --line: #e5dccb; --gray: #f3ecdf; --brand: #e8a33d; --gold-deep: #8a5a14; --brand-tint: #efe3cd; --brand-tint-2: #f6eedf; }
+body.app-split header.site { background: rgba(252, 249, 243, 0.92); }
+body.app-split .shot { border-color: #2a2520; }
+body.app-ht { --brand: #232425; --gold-deep: #4a4c50; --brand-tint: #efeeeb; --brand-tint-2: #f6f5f3; }
+.pixel { font-family: "Silkscreen", "Courier New", monospace; font-size: 22px; letter-spacing: 0.08em; color: #b9791c; margin-bottom: 6px; }
 
 /* ---------- 구역 ---------- */
 section { padding: 80px 0; }
@@ -185,13 +230,17 @@ footer.site { background: var(--gray); margin-top: 40px; padding: 56px 0 40px; f
 
 @media (max-width: 960px) {
   .wrap { padding: 0 20px; }
-  header.site .wrap { height: 68px; }
+  header.site .wrap { height: 60px; }
   .wordmark { font-size: 28px; }
   .logo img { height: 28px; }
   nav.gnb { gap: 18px; font-size: 14px; }
   .hero { grid-template-columns: 1fr; gap: 16px; }
   .hero-main { min-height: 0; padding: 28px 24px; flex-direction: column-reverse; align-items: flex-start; gap: 28px; }
-  .hero-main .phone { position: static; align-self: center; }
+  .hero-main .phone, .hero-main .shot { position: static; align-self: center; }
+  .hero-rot { min-height: 0; }
+  .hero-rot .hero-main { padding-bottom: 60px; }
+  .dots { left: 24px; bottom: 18px; }
+  .subnav .wrap { gap: 0 20px; font-size: 14px; }
   .hero-copy { max-width: none; }
   .hero-side { grid-template-rows: none; gap: 12px; }
   .side { min-height: 0; padding: 20px 52px 20px 20px; gap: 8px; }
@@ -204,7 +253,7 @@ footer.site { background: var(--gray); margin-top: 40px; padding: 56px 0 40px; f
   .svc { min-height: 0; }
   .band .wrap, .two { gap: 28px; }
   .sub-head { padding: 40px 0 44px; }
-  .sub-head.feature .phone { justify-self: center; }
+  .sub-head.feature .phone, .sub-head.feature .shot { justify-self: center; }
   .foot-cols { gap: 36px; }
   dl.info { grid-template-columns: 1fr; }
   dl.info dt { border-bottom: 0; padding-bottom: 0; }
@@ -215,4 +264,6 @@ footer.site { background: var(--gray); margin-top: 40px; padding: 56px 0 40px; f
 }
 @media (prefers-reduced-motion: reduce) {
   .tile, .folder, .side, .svc, .arr { transition: none; }
+  .hero-rot .hero-main.on { animation: none; }
+  html { scroll-behavior: auto; }
 }
