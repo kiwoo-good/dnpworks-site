@@ -114,7 +114,7 @@ nav.gnb a:hover, nav.gnb a[aria-current] { border-bottom-color: var(--ink); }
 .shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
 .shot { position: relative; }
 .shot .room { position: absolute; left: 4.615%; top: 11.944%; width: 90.769%; height: 40%; background: url("/img/split-room.png") 0 0 / 100% 100% no-repeat; }
-.shot .room i { position: absolute; left: 38.5%; top: 46.154%; width: 12%; height: 28.923%; background: url("/img/split-run.png") 0 0 / 800% 100% no-repeat; animation: shotRun 0.76s steps(8) infinite; }
+.shot .room i { position: absolute; left: 36%; top: 51.385%; width: 15%; height: 32.308%; background: url("/img/split-run.png") 0 0 / 800% 100% no-repeat; animation: shotRun 0.76s steps(8) infinite; }
 @keyframes shotRun { to { background-position-x: 114.2857%; } }
 .shots { display: flex; flex-wrap: wrap; gap: 40px; justify-content: center; padding: 8px 0 12px; }
 .note.center { text-align: center; }

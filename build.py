@@ -249,7 +249,8 @@ def home_tidy(t):
 def shot(name, alt):
     """휴대전화 틀에 넣은 앱 화면 (src/img/<name>.jpg)."""
     # 스플릿의 내 방 화면은 러닝머신 위 캐릭터가 뛴다. 그림 코드를 싣지 않고 앱 화면에서 뽑은 그림 두 장을 쓴다:
-    # split-room.png (방 한 장, 400×325) 위에 split-run.png (달리는 여덟 장면, 48×94 씩)를 같은 자리에 얹는다.
+    # split-room.png (방 한 장, 400×325) 위에 split-run.png (달리는 여덟 장면, 60×105 씩)를 방의 144,167 자리에 얹는다.
+    # 그림은 training-core 의 design/char-draft/themes.html '기록의 방'에서 뽑은 것 (고급 러닝머신 · 진열장, 2026-11-24).
     # 자리는 화면 사진 안에서 방이 놓인 곳 (390×720 가운데 18,86 에서 354×288) — style.css 의 .shot .room.
     run = '<span class="room" aria-hidden="true"><i></i></span>' if name == "split-room" else ""
     return f'<span class="shot"><img src="/img/{name}.jpg" alt="{e(alt)}" loading="lazy">{run}</span>'
