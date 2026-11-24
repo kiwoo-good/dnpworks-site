@@ -240,7 +240,9 @@ footer.site { background: var(--gray); margin-top: 40px; padding: 56px 0 40px; f
   nav.gnb { gap: 18px; font-size: 14px; }
   .hero { grid-template-columns: 1fr; gap: 16px; }
   .hero-main { min-height: 0; padding: 28px 24px; flex-direction: column-reverse; align-items: flex-start; gap: 28px; }
-  .hero-main .phone, .hero-main .shot { position: static; align-self: center; }
+  .hero-main .phone { position: static; align-self: center; }
+  /* static 이 아니라 relative — 사진 위에 겹친 방 그림(.room)이 사진을 기준으로 놓여야 한다 */
+  .hero-main .shot { position: relative; right: auto; top: auto; align-self: center; }
   .hero-rot { min-height: 0; }
   .hero-rot .hero-main { padding-bottom: 60px; }
   .dots { left: 24px; bottom: 18px; }
